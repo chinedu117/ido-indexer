@@ -33,7 +33,7 @@ export function startApi() {
     }
   });
 
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     logger.info(`API server listening on port ${port} — Swagger at /docs`);
   });
 }

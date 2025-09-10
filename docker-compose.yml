@@ -9,7 +9,7 @@ services:
       - mongo
       - redis
     ports:
-      - "3000:9090"
+      - "3000:3000"
 
   mongo:
     image: mongo:latest
@@ -28,7 +28,7 @@ services:
     image: redis:7
     restart: unless-stopped
     ports:
-      - "6379:6380"
+      - "6379:6379"
 
 volumes:
   ido_mongodb_data:
