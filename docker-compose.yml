@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    container_name: ido-indexer
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - "3000:9090"
+
+  mongo:
+    image: mongo:latest
+    container_name: ido_mongodb
+    restart: always
+    ports:
+      - "27017:27017" 
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: ido
+    volumes:
+      - ido_mongodb_data:/data/db
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6380"
+
+volumes:
+  ido_mongodb_data:

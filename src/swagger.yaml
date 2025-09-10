@@ -1,0 +1,51 @@
+openapi: 3.0.0
+info:
+  title: IDO Indexer API
+  version: 1.0.0
+  description: API to query purchases indexed from the IDO smart contract.
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /purchases:
+    get:
+      summary: List purchases
+      description: Returns a list of purchases stored in MongoDB.
+      parameters:
+        - in: query
+          name: buyer
+          schema:
+            type: string
+          description: Filter purchases by buyer address
+        - in: query
+          name: eventName
+          schema:
+            type: string
+          description: Filter purchases by event name
+        - in: query
+          name: blockNumber
+          schema:
+            type: integer
+          description: Filter purchases by block number
+      responses:
+        '200':
+          description: A list of purchases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    txHash:
+                      type: string
+                    buyer:
+                      type: string
+                    tokensBought:
+                      type: string
+                    amountWei:
+                      type: string
+                    blockNumber:
+                      type: integer
+                    eventName:
+                      type: string
