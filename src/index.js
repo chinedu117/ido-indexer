@@ -19,7 +19,6 @@ async function main() {
   } catch (err) {
 
     logger.error('Fatal error starting indexer', { err: err.message });
-    throw err;
     process.exit(1);
   }
 }

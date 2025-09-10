@@ -9,19 +9,18 @@ export function startWorker() {
     const data = job.data;
 
     // Normalize values that are BigNumber-like to strings
-    const tokensBought = data.args.tokensBought?.toString ? data.args.tokensBought.toString() : data.args.tokensBought;
-    const ethAmount = data.args.ethAmount?.toString ? data.args.ethAmount.toString() : data.args.ethAmount;
-
+    const buyer = data.args[0]?.toString ? data.args[0].toString() : data.args[0];
+    const nairaAmount = data.args[1]?.toString ? data.args[1].toString() : data.args[1];
+    const mchAmount = data.args[2]?.toString ? data.args[2].toString() : data.args[2];
     const doc = {
       txHash: data.txHash,
       logIndex: data.logIndex,
       blockNumber: data.blockNumber,
       blockHash: data.blockHash,
       eventName: data.eventName,
-      buyer: data.args.buyer,
-      tokensBought: tokensBought,
-      amountWei: ethAmount,
-      confirmed: false,
+      buyer: buyer,
+      nairaTokenWei: nairaAmount,
+      mchTokenWei: mchAmount,
       insertedAt: new Date()
     };
 

@@ -22,19 +22,31 @@ export async function startListener(provider) {
   provider.on({ address: config.CONTRACT_ADDRESS }, async (log) => {
     try {
       const parsed = iface.parseLog(log);
+      
+      // Convert BigInt values to strings for serialization
+      const serializedArgs = {};
+      for (const [key, value] of Object.entries(parsed.args)) {
+        if (typeof value === 'bigint') {
+          serializedArgs[key] = value.toString();
+        } else {
+          serializedArgs[key] = value;
+        }
+      }
+      
       const job = {
         txHash: log.transactionHash,
-        logIndex: Number(log.logIndex),
+        logIndex: Number(log.index),
         blockNumber: Number(log.blockNumber),
         blockHash: log.blockHash,
         eventName: parsed.name,
-        args: parsed.args
+        args: serializedArgs
       };
       logger.info('Received log', { tx: job.txHash, idx: job.logIndex, event: job.eventName });
       await queue.add('processLog', job, { removeOnComplete: true, attempts: 3 });
       logger.info('Enqueued log', { tx: job.txHash, idx: job.logIndex });
     } catch (e) {
       logger.error('Failed to parse log', e.message);
+      throw e;
     }
   });
 
