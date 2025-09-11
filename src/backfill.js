@@ -37,19 +37,28 @@ async function runBackfill() {
     for (const log of logs) {
       try {
         const parsed = iface.parseLog(log);
-        const tokensBought = parsed.args.tokensBought?.toString();
-        const ethAmount = parsed.args.ethAmount?.toString();
-
+        // Convert BigInt values to strings for serialization
+        const serializedArgs = {};
+        for (const [key, value] of Object.entries(parsed.args)) {
+          if (typeof value === 'bigint') {
+            serializedArgs[key] = value.toString();
+          } else {
+            serializedArgs[key] = value;
+          }
+        }
+        // Normalize values that are BigNumber-like to strings
+        const buyer = serializedArgs[0]?.toString ? serializedArgs[0].toString() : serializedArgs[0];
+        const nairaAmount = serializedArgs[1]?.toString ? serializedArgs[1].toString() : serializedArgs[1];
+        const mchAmount = serializedArgs[2]?.toString ? serializedArgs[2].toString() : serializedArgs[2];
         const doc = {
           txHash: log.transactionHash,
-          logIndex: Number(log.logIndex),
+          logIndex: Number(log.index),
           blockNumber: Number(log.blockNumber),
           blockHash: log.blockHash,
           eventName: parsed.name,
-          buyer: parsed.args.buyer,
-          tokensBought,
-          amountWei: ethAmount,
-          confirmed: false,
+          buyer: buyer,
+          nairaTokenWei: nairaAmount,
+          mchTokenWei: mchAmount,
           insertedAt: new Date()
         };
 
