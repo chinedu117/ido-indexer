@@ -2,50 +2,140 @@ openapi: 3.0.0
 info:
   title: IDO Indexer API
   version: 1.0.0
-  description: API to query purchases indexed from the IDO smart contract.
+  description: API to query TokensPurchased events indexed from the IDO smart contract. Returns purchase data stored in MongoDB with support for filtering by buyer address, event name, and block number.
 servers:
   - url: http://localhost:3000
+    description: Local development server
 
 paths:
   /purchases:
     get:
-      summary: List purchases
-      description: Returns a list of purchases stored in MongoDB.
+      summary: List TokensPurchased events
+      description: |
+        Returns a list of TokensPurchased events stored in MongoDB. Results are sorted by block number and log index in descending order (most recent first) and limited to 50 results.
       parameters:
         - in: query
           name: buyer
           schema:
             type: string
-          description: Filter purchases by buyer address
+            pattern: '^0x[a-fA-F0-9]{40}$'
+          description: Filter purchases by buyer address. The query parameter is converted to lowercase for comparison, but stored data may have mixed case. For best results, use the exact case from existing records.
+          example: "0x742d35Cc6634C0532925a3b8D4d22ad4C2d3A04f"
         - in: query
           name: eventName
           schema:
             type: string
+            enum: [TokensPurchased]
           description: Filter purchases by event name
+          example: "TokensPurchased"
         - in: query
           name: blockNumber
           schema:
             type: integer
-          description: Filter purchases by block number
+            minimum: 0
+          description: Filter purchases by specific block number
+          example: 12345678
       responses:
         '200':
-          description: A list of purchases
+          description: A list of purchase events
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    txHash:
-                      type: string
-                    buyer:
-                      type: string
-                    tokensBought:
-                      type: string
-                    amountWei:
-                      type: string
-                    blockNumber:
-                      type: integer
-                    eventName:
-                      type: string
+                  $ref: '#/components/schemas/Purchase'
+              examples:
+                sample_response:
+                  summary: Sample purchase events
+                  value:
+                    - _id: "64f1234567890abcdef12345"
+                      txHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                      logIndex: 2
+                      blockNumber: 12345678
+                      blockHash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                      eventName: "TokensPurchased"
+                      buyer: "0x742d35cc6634c0532925a3b8d4d22ad4c2d3a04f"
+                      nairaTokenWei: "1000000000000000000000"
+                      mchTokenWei: "500000000000000000000"
+                      confirmed: false
+                      insertedAt: "2023-09-12T10:30:00.000Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "internal server error"
+
+components:
+  schemas:
+    Purchase:
+      type: object
+      description: A TokensPurchased event from the IDO smart contract
+      required:
+        - txHash
+        - logIndex
+        - blockNumber
+        - blockHash
+        - eventName
+        - buyer
+        - nairaTokenWei
+        - mchTokenWei
+        - insertedAt
+      properties:
+        _id:
+          type: string
+          description: MongoDB document ID
+          example: "64f1234567890abcdef12345"
+        txHash:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+          description: Transaction hash where the event was emitted
+          example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        logIndex:
+          type: integer
+          minimum: 0
+          description: Index of the log within the transaction
+          example: 2
+        blockNumber:
+          type: integer
+          minimum: 0
+          description: Block number where the transaction was included
+          example: 12345678
+        blockHash:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+          description: Hash of the block containing the transaction
+          example: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+        eventName:
+          type: string
+          enum: [TokensPurchased]
+          description: Name of the smart contract event
+          example: "TokensPurchased"
+        buyer:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{40}$'
+          description: Ethereum address of the token buyer (lowercase)
+          example: "0x742d35cc6634c0532925a3b8d4d22ad4c2d3a04f"
+        nairaTokenWei:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Amount of Naira tokens purchased (in wei, as string to handle large numbers)
+          example: "1000000000000000000000"
+        mchTokenWei:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Amount of MCH tokens received (in wei, as string to handle large numbers)
+          example: "500000000000000000000"
+        confirmed:
+          type: boolean
+          description: Whether the transaction has been confirmed (optional field, may be present in some records)
+          example: false
+        insertedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the event was indexed and stored in the database
+          example: "2023-09-12T10:30:00.000Z"
