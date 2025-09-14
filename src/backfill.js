@@ -5,9 +5,9 @@ import config from './config.js';
 import logger from './logger.js';
 import { connectDb } from './models/purchases.js';
 
-const abi = JSON.parse(fs.readFileSync(config.ABI_PATH, 'utf8'));
-const iface = new Interface(abi);
-const topics = null; // can set to [iface.getEventTopic("Purchased")] to filter only that event
+const ABI = JSON.parse(fs.readFileSync(config.ABI_PATH, 'utf8'));
+const iface = new Interface(ABI.abi);
+const topics = [iface.getEvent("TokensPurchased").topicHash];
 
 async function runBackfill() {
   const provider = createProvider();
@@ -33,7 +33,7 @@ async function runBackfill() {
       address: config.CONTRACT_ADDRESS,
       topics
     });
-
+    logger.info('Logs fetched');
     for (const log of logs) {
       try {
         const parsed = iface.parseLog(log);

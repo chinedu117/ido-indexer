@@ -10,6 +10,6 @@ export default {
   ABI_PATH: new URL('./abi/abi-MedChainIDO.json', import.meta.url).pathname,
   START_BLOCK: Number(process.env.START_BLOCK || 0),
   CONFIRMATIONS: Number(process.env.CONFIRMATIONS || 6),
-  BATCH_SIZE: Number(process.env.BATCH_SIZE || 1000),
+  BATCH_SIZE: Number(process.env.BATCH_SIZE || 10),
   LOG_LEVEL: process.env.LOG_LEVEL || 'info'
 };
